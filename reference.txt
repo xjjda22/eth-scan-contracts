@@ -1,0 +1,15 @@
+// EVM fuzzer
+// https://github.com/crytic/echidna
+// https://github.com/palkeo/pakala
+
+// contract analyzers 
+// SECURIFY, MYTHRIL, OYENTE, SEREUM ,VANDAL & SAILFISH
+// https://github.com/eth-sri/securify2
+// https://github.com/ConsenSys/mythril
+// https://github.com/enzymefinance/oyente
+// https://github.com/ucsb-seclab/sailfish
+
+// examples
+// https://github.com/ConsenSys/mythril
+// myth analyze -a 0x41f83F6F25Eb0D3eB9615Ab7BbBf995E7f7fbA4F --infura-id 460f40a260564ac4a4f4b3fffb032dad --execution-timeout 20 -m AccidentallyKillable
+// myth analyze -c 608060405260043610603f57600035 --execution-timeout 20 -m AccidentallyKillable
