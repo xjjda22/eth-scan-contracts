@@ -4,7 +4,10 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "scan": "node findVulContracts.js"
+    "scan": "node findVulContracts.js",
+    "chain": "hardhat node",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js"
   },
   "author": {
     "name": "harry",
