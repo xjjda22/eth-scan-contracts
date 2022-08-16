@@ -4,28 +4,25 @@ require('dotenv').config();
 
 const fs = require('fs');
 const axios = require('axios');
-const { providers, utils } = require("ethers");
-const { inspect }  = require('util');
+const { utils } = require("ethers");
 
-const deepLogs = (obj) => {
-  return inspect(obj, {depth: 5});
-}
-
-const { INFURA_APIKEY, ARCHIVENODE_APIKEY, ETHERSCAN_APIKEY } = process.env;
-const ETHERSCAN_ABI_ENDPOINT = a => `https://api.etherscan.io/api?module=contract&action=getabi&address=${a}&apikey=${ETHERSCAN_APIKEY}`;
-
-// const ETHEREUM_RPC_URL = `https://mainnet.infura.io/v3/${INFURA_APIKEY}`;
-const ETHEREUM_RPC_URL = `https://api.archivenode.io/${ARCHIVENODE_APIKEY}`;
-
-const provider = new providers.StaticJsonRpcProvider(ETHEREUM_RPC_URL);
-// const provider = new providers.JsonRpcProvider(ETHEREUM_RPC_URL);
-// const provider = new providers.getDefaultProvider(ETHEREUM_RPC_URL);
+const { 
+    provider, 
+    deepLogs, 
+    execute, 
+    checkOp,
+    getBlockNumber,
+    getBlock,
+    getTx,
+    getABI,
+}  = require('./utils');
 
 console.log('start --');
-console.log('ETHEREUM_RPC_URL',ETHEREUM_RPC_URL);
 
-const getBlockNumber = async (n, debug) => {
-    const blockNumber = await provider.getBlockNumber();
+let LATEST_BLOCK = 0, START_SCANNED_BLOCK = 0, PENDING_BLOCK_SCANNED = 20000;
+
+const getLastestBlockNumber = async (n, debug) => {
+    const blockNumber = await getBlockNumber();
     const blocksPerDay = 6600;
     LATEST_BLOCK = blockNumber;
     START_SCANNED_BLOCK = blockNumber - (n * blocksPerDay);
@@ -33,32 +30,6 @@ const getBlockNumber = async (n, debug) => {
     if(debug) console.log('blocks not scanned',START_SCANNED_BLOCK);
     readNumOfBlocks(START_SCANNED_BLOCK, 0, PENDING_BLOCK_SCANNED, 2000, true);
     return blockNumber;
-}
-
-const getBlock = async (blockNumber, debug) => {
-    const block = await provider.getBlockWithTransactions(blockNumber);
-    // if(debug) console.log('block',block);
-    return block;
-}
-
-const getABI = async (a, debug) => {
-  
-  const api_url = ETHERSCAN_ABI_ENDPOINT(a);
-  // if(debug) console.log('api -- ',api_url);
-
-  const config = {
-    timeout: 30000,
-    url: api_url,
-    method: 'get',
-    responseType: 'json'
-  };
-  const res = await axios(config);
-  const data = res.data;
-  // if(debug) console.log('data -- ',api_url, deepLogs(data) );
-  if(debug) {
-    if(res.status != 200) console.log('res --', deepLogs(data) );
-  }
-  return data;
 }
 
 const readBlock = async (blockNumber, debug) => {
@@ -95,15 +66,15 @@ const readBlock = async (blockNumber, debug) => {
                 "hash": c.hash, 
                 "address": c.creates
             }
-            let verifiedContractsArr = await require(`./json/verified-contracts-clones.json`);
-            verifiedContractsArr.push(cobj);
+            // let verifiedContractsArr = await require(`./json/verified-contracts-clones.json`);
+            // verifiedContractsArr.push(cobj);
             // if(debug) console.log('verifiedContractsArr ',verifiedContractsArr);
 
             // save verified contracts
-            await fs.writeFile(`${__dirname}/json/verified-contracts-clones.json`, JSON.stringify(verifiedContractsArr), console.error);
+            // await fs.writeFile(`${__dirname}/json/verified-contracts-clones.json`, JSON.stringify(verifiedContractsArr), console.error);
 
             // save verified contract abi
-            await fs.writeFile(`${__dirname}/json/${c.blockNumber}-${c.creates}.json`, JSON.stringify(c.ABI), console.error);
+            // await fs.writeFile(`${__dirname}/json/${c.blockNumber}-${c.creates}.json`, JSON.stringify(c.ABI), console.error);
 
         })
     }
@@ -118,9 +89,7 @@ const readNumOfBlocks = async (blockNumber, inc, num, inter, debug) => {
     },inter);
 }
 
-let LATEST_BLOCK = 0, START_SCANNED_BLOCK = 0, PENDING_BLOCK_SCANNED = 20000;
-
-getBlockNumber(3, true);
+getLastestBlockNumber(3, true);
 // readNumOfBlocks(14203083-1, 0, 1, 2000, true);
 
 module.exports = {
