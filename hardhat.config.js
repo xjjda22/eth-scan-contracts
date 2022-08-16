@@ -4,9 +4,9 @@ require('dotenv').config();
 const fs = require("fs");
 require("@nomiclabs/hardhat-waffle");
 
-const { INFURA_APIKEY } = process.env;
+const { INFURA_APIKEY, GORELI_PRIV_ACC } = process.env;
 
-const defaultNetwork = "mainnet";
+const defaultNetwork = "goerli";
 const mainnetGwei = 21;
 
 const mnemonic = () => {
@@ -31,6 +31,15 @@ module.exports = {
 	      url: "https://mainnet.infura.io/v3/"+INFURA_APIKEY, // <---- YOUR INFURA ID! (or it won't work)
 	      //      url: "https://speedy-nodes-nyc.moralis.io/XXXXXXXXXXXXXXXXXXXXXXXXX/eth/mainnet", // <---- YOUR MORALIS ID! (not limited to infura)
 	      gasPrice: mainnetGwei * 1000000000,
+	      // accounts: {
+	      //   p
+	      // },
+	    },
+	    goerli: {
+	      url: "https://goerli.infura.io/v3/"+INFURA_APIKEY, // <---- YOUR INFURA ID! (or it won't work)
+	      //      url: "https://speedy-nodes-nyc.moralis.io/XXXXXXXXXXXXXXXXXXXXXXXXX/eth/mainnet", // <---- YOUR MORALIS ID! (not limited to infura)
+	      gasPrice: mainnetGwei * 1000000000,
+	      accounts:[ GORELI_PRIV_ACC ]
 	      // accounts: {
 	      //   mnemonic: mnemonic(),
 	      // },
@@ -68,6 +77,7 @@ module.exports = {
 	namedAccounts: {
 	    deployer: {
 	      default: 0, // here this will by default take the first account as deployer
+	      // "goerli": GORELI_PRIV_ACC,
 	    },
 	}
 };

@@ -23,6 +23,7 @@ const { INFURA_APIKEY, ARCHIVENODE_APIKEY, ETHERSCAN_APIKEY } = process.env;
 const ETHERSCAN_ABI_ENDPOINT = a => `https://api.etherscan.io/api?module=contract&action=getabi&address=${a}&apikey=${ETHERSCAN_APIKEY}`;
 
 // const ETHEREUM_RPC_URL = `https://mainnet.infura.io/v3/${INFURA_APIKEY}`;
+// const ETHEREUM_RPC_URL = `https://goerli.infura.io/v3/${INFURA_APIKEY}`;
 const ETHEREUM_RPC_URL = `https://api.archivenode.io/${ARCHIVENODE_APIKEY}`;
 
 const provider = new providers.StaticJsonRpcProvider(ETHEREUM_RPC_URL);
@@ -61,6 +62,11 @@ const getBlock = async (blockNumber, debug) => {
     // if(debug) console.log('block',block);
     return block;
 }
+const getTx = async (hash, debug) => {
+    const tx = await provider.getTransaction(hash);
+    if(debug) console.log('tx--',tx);
+    return tx;
+}
 
 const getABI = async (a, debug) => {
   
@@ -87,7 +93,7 @@ const readBlock = async (blockNumber, debug) => {
     let contract_trs = [];
     if(debug) console.log('block',blockNumber);
 
-    let block = await getBlock(blockNumber);
+    let block = await getBlock(blockNumber, true);
     let txs = block.transactions;
     let j=0;
     for(j=0;j<txs.length;j++){
@@ -120,18 +126,65 @@ const readBlock = async (blockNumber, debug) => {
                     "analyze": t.analyze
 
                 }
-                let vulContractsArr = await require(`./json/vul-contracts-clones.json`);
+                // let vulContractsArr = await require(`./json/vul-contracts-clones.json`);
                 // vulContractsArr.push(cobj);
                 // if(debug) console.log('vulContractsArr ',vulContractsArr);
 
                 // // save vul contracts
-                await fs.writeFile(`${__dirname}/json/vul-contracts-clones.json`, JSON.stringify(vulContractsArr), console.error);
+                // await fs.writeFile(`${__dirname}/json/vul-contracts-clones.json`, JSON.stringify(vulContractsArr), console.error);
 
                 // // save vul contract abi
-                await fs.writeFile(`${__dirname}/json/${t.blockNumber}-${t.creates}-vul.json`, JSON.stringify(t), console.error);
+                // await fs.writeFile(`${__dirname}/json/${t.blockNumber}-${t.creates}-vul.json`, JSON.stringify(t), console.error);
             })
         }
     }
+}
+
+const readTx = async (hash, debug) => {
+    
+    let contract_trs = [];
+    if(debug) console.log('tx',hash);
+
+    let t = await getTx(hash, true);
+    if(t.to == null || t.to == 0){
+        let a = t.creates ? utils.getAddress(t.creates) : null;
+
+        // if(debug) console.log('contract trx',t);
+        // if(debug) console.log('contract add',a);    
+
+        await execute(`myth analyze -c ${t.data} --execution-timeout 150 `, async (res) => {
+            t.analyze = res;
+            // if(res.length <= 67) return;
+
+            if(debug) console.log('myth analyze contract ',res);
+            // if(debug) console.log('myth analyze contract ',typeof res, res.length);
+            if(debug) console.log('contract address',t.creates);
+
+            let cobj = {
+                "block":t.blockNumber,
+                "hash": t.hash, 
+                "address": t.creates,
+                "byteCode": t.data,
+                // "opCodes": t.opCodes,
+                // "jumpDestinations": t.jumpDestinations,
+                // "interpretedCodes": t.interpretedCodes,
+                // "solCodes": t.interpretedCodes,
+                // "selfDestruct": t.selfDestruct,
+                "analyze": t.analyze
+
+            }
+            // let vulContractsArr = await require(`./json/vul-contracts-clones.json`);
+            // vulContractsArr.push(cobj);
+            // if(debug) console.log('vulContractsArr ',vulContractsArr);
+
+            // // save vul contracts
+            // await fs.writeFile(`${__dirname}/json/vul-contracts-clones.json`, JSON.stringify(vulContractsArr), console.error);
+
+            // // save vul contract abi
+            // await fs.writeFile(`${__dirname}/json/${t.blockNumber}-${t.creates}-vul.json`, JSON.stringify(t), console.error);
+        })
+    }
+    
 }
 
 const readNumOfBlocks = async (blockNumber, inc, num, inter, debug) => {
@@ -146,10 +199,13 @@ const readNumOfBlocks = async (blockNumber, inc, num, inter, debug) => {
 let LATEST_BLOCK = 0, START_SCANNED_BLOCK = 0, PENDING_BLOCK_SCANNED = 20000;
 
 getBlockNumber(3, true);
-// readNumOfBlocks(14329929-1, 0, 1, 2000, true);
+// readNumOfBlocks(7298514-1, 0, 1, 2000, true);
 // execute("echo -n 608060405260043610603f57600035 | evmasm -d", (o)=>{
 //     console.log(o);
 // })
+
+//goerli
+// readTx('0xd0595c674cdbec1f70645c10a6655f2651b0acce4e81b76857cb82a6022fd6e9', true)
 
 module.exports = {
   readNumOfBlocks
